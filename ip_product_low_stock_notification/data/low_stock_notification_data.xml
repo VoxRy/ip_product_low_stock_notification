@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Cron job for automatic low stock notification -->
+        <record id="ir_cron_low_stock_notification" model="ir.cron">
+            <field name="name">Low Stock Notification</field>
+            <field name="model_id" ref="model_stock_quant"/>
+            <field name="state">code</field>
+            <field name="code">model.send_low_stock_notification()</field>
+            <field name="interval_number">24</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="False"/>
+        </record>
+
+        <!-- Email template for low stock notification -->
+        <record id="email_template_low_stock_notification" model="mail.template">
+            <field name="name">Low Stock Notification</field>
+            <field name="model_id" ref="stock.model_stock_quant"/>
+            <field name="subject">Low Stock Alert - {{ object.product_id.name }}</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif;">
+                    <h2>Low Stock Alert</h2>
+                    <p>Dear Team,</p>
+                    <p>This is to inform you that the following product has low stock:</p>
+                    <table border="1" style="border-collapse: collapse; width: 100%;">
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="padding: 8px;">Product</th>
+                            <th style="padding: 8px;">Current Quantity</th>
+                            <th style="padding: 8px;">Location</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">{{ object.product_id.name }}</td>
+                            <td style="padding: 8px;">{{ object.quantity }}</td>
+                            <td style="padding: 8px;">{{ object.location_id.name }}</td>
+                        </tr>
+                    </table>
+                    <p>Please take necessary action to replenish the stock.</p>
+                    <p>Best regards,<br/>Stock Management System</p>
+                </div>
+            </field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+        <!-- Report Action for Low Stock Report -->
+        <report
+            id="action_low_stock_report"
+            model="low.stock.report.wizard"
+            string="Low Stock Report"
+            report_type="qweb-pdf"
+            name="ip_product_low_stock_notification.report_low_stock_document"
+            file="ip_product_low_stock_notification.report_low_stock_document"
+            menu="False"
+        />
+    </data>
+</odoo>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="res_config_settings_view_form_inherit" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.low.stock</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="stock.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[hasclass('settings')]" position="inside">
+                    <div class="app_settings_block" data-string="Low Stock Notification" string="Low Stock Notification" data-key="ip_product_low_stock_notification">
+                        <h2>Low Stock Notification</h2>
+                        <div class="row mt16 o_settings_container">
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="low_stock_notification_type"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="low_stock_notification_type"/>
+                                    <div class="text-muted">
+                                        Select the type of notification rule to use
+                                    </div>
+                                    <div class="content-group" attrs="{'invisible': [('low_stock_notification_type', '!=', 'global')]}">
+                                        <div class="mt16">
+                                            <field name="global_minimum_quantity" class="o_light_label"/>
+                                            <label for="global_minimum_quantity"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6 o_setting_box">
+                                <div class="o_setting_left_pane">
+                                    <field name="auto_notification_enabled"/>
+                                </div>
+                                <div class="o_setting_right_pane">
+                                    <label for="auto_notification_enabled"/>
+                                    <div class="text-muted">
+                                        Enable automatic low stock notifications
+                                    </div>
+                                    <div class="content-group" attrs="{'invisible': [('auto_notification_enabled', '=', False)]}">
+                                        <div class="mt16">
+                                            <field name="notification_time" class="o_light_label"/>
+                                            <label for="notification_time"/>
+                                        </div>
+                                        <div class="mt16">
+                                            <field name="notification_user_ids" widget="many2many_tags" class="o_light_label"/>
+                                            <label for="notification_user_ids"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+
