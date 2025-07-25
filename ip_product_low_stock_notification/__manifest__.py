@@ -1,7 +1,7 @@
 
 {
     'name': 'Product Low Stock Report/ Notification',
-    'version': '15.0.1.0.0',
+    'version': '15.0.1.0.2',
     'summary': 'Product Low stock notification based on different types (Global, Individual and Reordering Rules).',
     'description': """
         Product Low Stock Notification

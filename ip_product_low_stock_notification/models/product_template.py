@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class ProductTemplate(models.Model):
@@ -20,42 +23,42 @@ class ProductTemplate(models.Model):
     
     @api.model
     def get_low_stock_products(self, company_id=None, location_id=None):
-        """Get products with low stock based on configuration"""
+        """Get products with low stock based on configuration."""
         domain = [('type', '=', 'product')]
-        
         if company_id:
             domain.append(('company_id', '=', company_id))
-            
+        
         products = self.search(domain)
-        print(f"DEBUG: Found {len(products)} products.")
+        _logger.debug("Found %s products.", len(products))
         low_stock_products = []
         
-        notification_type = self.env['ir.config_parameter'].sudo().get_param(
+        icp = self.env['ir.config_parameter'].sudo()
+        notification_type = icp.get_param(
             'ip_product_low_stock_notification.notification_type', 'global'
         )
-        global_min_qty = float(self.env['ir.config_parameter'].sudo().get_param(
+        global_min_qty = float(icp.get_param(
             'ip_product_low_stock_notification.global_minimum_quantity', 0.0
         ))
         
-        print(f"DEBUG: Notification Type: {notification_type}, Global Min Qty: {global_min_qty}")
+        _logger.debug("Notification Type: %s, Global Min Qty: %s", notification_type, global_min_qty)
 
         for product in products:
             if not product.low_stock_notification_enabled:
                 continue
-                
-            # Get current stock quantity
-            quant_domain = [('product_id', 'in', product.product_variant_ids.ids)]
-            if location_id:
-                quant_domain.append(('location_id', '=', location_id))
-            if company_id:
-                quant_domain.append(('company_id', '=', company_id))
-                
-            quants = self.env['stock.quant'].search(quant_domain)
-            current_qty = sum(quants.mapped('quantity'))
-            
-            print(f"DEBUG: Product: {product.name}, Current Qty: {current_qty}")
 
-            # Determine minimum quantity based on notification type
+            # Doğru context ile stok miktarını al
+            context = {'company_id': company_id or self.env.company.id}
+            if location_id:
+                context['location'] = location_id
+
+            # product_variant_ids üzerinden qty_available
+            current_qty = sum(
+                product.product_variant_ids.with_context(context).mapped('qty_available')
+            )
+
+            _logger.debug("Product: %s, Current Qty: %s", product.name, current_qty)
+
+            # Minimum stok hesapla
             if notification_type == 'global':
                 min_qty = global_min_qty
             elif notification_type == 'individual':
@@ -68,7 +71,7 @@ class ProductTemplate(models.Model):
             else:
                 min_qty = 0.0
                 
-            print(f"DEBUG: Product: {product.name}, Calculated Min Qty: {min_qty}")
+            _logger.debug("Product: %s, Calculated Min Qty: %s", product.name, min_qty)
 
             if current_qty <= min_qty:
                 low_stock_products.append({
@@ -77,5 +80,5 @@ class ProductTemplate(models.Model):
                     'min_qty': min_qty,
                 })
                 
-        print(f"DEBUG: Low stock products found: {len(low_stock_products)}")
+        _logger.info("Low stock products found: %s", len(low_stock_products))
         return low_stock_products

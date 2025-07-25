@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import ast
-from odoo import models, fields, api
-from datetime import datetime, timedelta
+from odoo import models, api
+import logging
 
+_logger = logging.getLogger(__name__)
 
 class StockQuant(models.Model):
     _inherit = 'stock.quant'
@@ -17,10 +18,13 @@ class StockQuant(models.Model):
         )
         
         if auto_notification in ['False', False, '0', '', None]:
+            _logger.info("Low stock notification is disabled.")
             return
 
         # Get notification user IDs from config (stored as string list)
-        user_ids_param = param_env.get_param('ip_product_low_stock_notification.notification_user_ids', default='[]')
+        user_ids_param = param_env.get_param(
+            'ip_product_low_stock_notification.notification_user_ids', default='[]'
+        )
         
         try:
             user_ids = ast.literal_eval(user_ids_param)
@@ -28,13 +32,18 @@ class StockQuant(models.Model):
             user_ids = []
 
         if not user_ids:
+            _logger.warning("No users configured for low stock notification.")
             return
 
         users = self.env['res.users'].browse(user_ids)
 
-        # Get low stock products
-        low_stock_products = self.env['product.template'].get_low_stock_products()
+        # Get low stock products with correct context
+        low_stock_products = self.env['product.template'].get_low_stock_products(
+            company_id=self.env.company.id,
+            location_id=self.env.ref('stock.stock_location_stock').id
+        )
         if not low_stock_products:
+            _logger.info("No low stock products found.")
             return
 
         # Prepare email content
@@ -51,10 +60,25 @@ class StockQuant(models.Model):
                 }
                 mail = self.env['mail.mail'].create(mail_values)
                 mail.send()
+                _logger.info("Low stock email sent to %s", user.email)
 
     def _prepare_low_stock_email_body(self, low_stock_products):
         """Prepare email body for low stock notification"""
-        body = """
+        rows = ""
+        for item in low_stock_products:
+            product = item['product']
+            current_qty = item['current_qty']
+            min_qty = item['min_qty']
+
+            rows += f"""
+                <tr>
+                    <td style="padding: 8px;">{product.name}</td>
+                    <td style="padding: 8px; text-align:right;">{current_qty}</td>
+                    <td style="padding: 8px; text-align:right;">{min_qty}</td>
+                </tr>
+            """
+
+        body = f"""
         <div style="font-family: Arial, sans-serif;">
             <h2>Low Stock Notification</h2>
             <p>The following products have low stock levels:</p>
@@ -67,26 +91,10 @@ class StockQuant(models.Model):
                     </tr>
                 </thead>
                 <tbody>
-        """
-
-        for item in low_stock_products:
-            product = item['product']
-            current_qty = item['current_qty']
-            min_qty = item['min_qty']
-
-            body += f"""
-                <tr>
-                    <td style="padding: 8px;">{product.name}</td>
-                    <td style="padding: 8px;">{current_qty}</td>
-                    <td style="padding: 8px;">{min_qty}</td>
-                </tr>
-            """
-
-        body += """
+                    {rows}
                 </tbody>
             </table>
             <p>Please take necessary action to replenish the stock.</p>
         </div>
         """
-
         return body
