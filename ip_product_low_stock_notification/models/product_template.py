@@ -73,7 +73,8 @@ class ProductTemplate(models.Model):
                 
             _logger.debug("Product: %s, Calculated Min Qty: %s", product.name, min_qty)
 
-            if current_qty <= min_qty:
+            # Sadece min_qty > 0 olan ürünleri kontrol et
+            if min_qty > 0 and current_qty <= min_qty:
                 low_stock_products.append({
                     'product': product,
                     'current_qty': current_qty,
