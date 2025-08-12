@@ -56,7 +56,7 @@ class StockQuant(models.Model):
                     'subject': 'Low Stock Notification',
                     'body_html': email_body,
                     'email_to': user.email,
-                    'auto_delete': True,
+                    'auto_delete': False,
                 }
                 mail = self.env['mail.mail'].create(mail_values)
                 mail.send()

@@ -16,7 +16,7 @@
         <!-- Email template for low stock notification -->
         <record id="email_template_low_stock_notification" model="mail.template">
             <field name="name">Low Stock Notification</field>
-            <field name="model_name">stock.quant</field> <!-- Bu satırı kullan -->
+            <field name="model">stock.quant</field> <!-- Bu satırı kullan -->
             <field name="subject">Low Stock Alert - {{ object.name }}</field>
             <field name="body_html" type="html">
                 <div style="font-family: Arial, sans-serif;">
