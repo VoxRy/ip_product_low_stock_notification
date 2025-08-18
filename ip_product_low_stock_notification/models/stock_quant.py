@@ -16,7 +16,7 @@ class StockQuant(models.Model):
         auto_notification = param_env.get_param(
             'ip_product_low_stock_notification.auto_notification_enabled', default='False'
         )
-        
+
         if auto_notification in ['False', False, '0', '', None]:
             _logger.info("Low stock notification is disabled.")
             return
@@ -25,7 +25,7 @@ class StockQuant(models.Model):
         user_ids_param = param_env.get_param(
             'ip_product_low_stock_notification.notification_user_ids', default='[]'
         )
-        
+
         try:
             user_ids = ast.literal_eval(user_ids_param)
         except Exception:
@@ -37,9 +37,8 @@ class StockQuant(models.Model):
 
         users = self.env['res.users'].browse(user_ids)
 
-        # Get low stock products with correct context
+        # Get low stock products (no company arg)
         low_stock_products = self.env['product.template'].get_low_stock_products(
-            company_id=self.env.company.id,
             location_id=self.env.ref('stock.stock_location_stock').id
         )
         if not low_stock_products:
@@ -63,16 +62,28 @@ class StockQuant(models.Model):
                 _logger.info("Low stock email sent to %s", user.email)
 
     def _prepare_low_stock_email_body(self, low_stock_products):
-        """Prepare email body for low stock notification"""
+        """Prepare email body for low stock notification (with Internal Reference)"""
         rows = ""
         for item in low_stock_products:
-            product = item['product']
+            product_tmpl = item['product']           # product.template
             current_qty = item['current_qty']
             min_qty = item['min_qty']
 
+            # Determine Internal Reference (default_code)
+            # Prefer single-variant code, else fallback to template code or '-'
+            code = "-"
+            try:
+                if getattr(product_tmpl, 'product_variant_count', 0) == 1 and product_tmpl.product_variant_id:
+                    code = product_tmpl.product_variant_id.default_code or "-"
+                else:
+                    code = (getattr(product_tmpl, 'default_code', None) or "-")
+            except Exception:
+                code = "-"
+
             rows += f"""
                 <tr>
-                    <td style="padding: 8px;">{product.name}</td>
+                    <td style="padding: 8px;">{code}</td>
+                    <td style="padding: 8px;">{product_tmpl.name}</td>
                     <td style="padding: 8px; text-align:right;">{current_qty}</td>
                     <td style="padding: 8px; text-align:right;">{min_qty}</td>
                 </tr>
@@ -85,6 +96,7 @@ class StockQuant(models.Model):
             <table border="1" style="border-collapse: collapse; width: 100%;">
                 <thead>
                     <tr style="background-color: #f2f2f2;">
+                        <th style="padding: 8px;">Internal Reference</th>
                         <th style="padding: 8px;">Product</th>
                         <th style="padding: 8px;">Current Quantity</th>
                         <th style="padding: 8px;">Minimum Quantity</th>

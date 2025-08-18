@@ -7,11 +7,6 @@
                     <div class="page">
                         <h2>Low Stock Report</h2>
 
-                        <p>
-                            <strong>Company:</strong>
-                            <span t-field="o.company_id.name"/>
-                        </p>
-
                         <p t-if="o.location_id">
                             <strong>Location:</strong>
                             <span t-field="o.location_id.name"/>
@@ -20,6 +15,7 @@
                         <table class="table table-condensed">
                             <thead>
                                 <tr>
+                                    <th>Internal Reference</th>
                                     <th>Product</th>
                                     <th>Current Quantity</th>
                                     <th>Minimum Quantity</th>
@@ -27,6 +23,9 @@
                             </thead>
                             <tbody>
                                 <tr t-foreach="o.low_stock_report_line_ids" t-as="product_item">
+                                    <td>
+                                        <t t-esc="product_item.product_id.default_code or ''"/>
+                                    </td>
                                     <td>
                                         <span t-field="product_item.product_id.name"/>
                                     </td>

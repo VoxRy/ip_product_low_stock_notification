@@ -8,7 +8,6 @@
                 <form string="Low Stock Report">
                     <group>
                         <group>
-                            <field name="company_id"/>
                             <field name="location_id"/>
                         </group>
                         <group>

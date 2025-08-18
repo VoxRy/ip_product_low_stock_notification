@@ -11,12 +11,6 @@ class LowStockReportWizard(models.Model):
     _name = 'low.stock.report.wizard'
     _description = 'Low Stock Report Wizard'
 
-    company_id = fields.Many2one(
-        'res.company',
-        string='Company',
-        default=lambda self: self.env.company
-    )
-
     location_id = fields.Many2one(
         'stock.location',
         string='Location',
@@ -44,7 +38,6 @@ class LowStockReportWizard(models.Model):
     def action_generate_report(self):
         """Generate low stock report"""
         low_stock_products_data = self.env['product.template'].get_low_stock_products(
-            company_id=self.company_id.id if self.company_id else None,
             location_id=self.location_id.id if self.location_id else None
         )
 
@@ -53,7 +46,7 @@ class LowStockReportWizard(models.Model):
 
         for item in low_stock_products_data:
             product = item['product'].product_variant_id  # Use product.product
-            line = self.env['low.stock.report.line'].create({
+            self.env['low.stock.report.line'].create({
                 'wizard_id': self.id,
                 'product_id': product.id,
                 'current_quantity': item['current_qty'],
@@ -82,7 +75,7 @@ class LowStockReportWizard(models.Model):
         for user in self.user_ids:
             if user.email:
                 mail_values = {
-                    'subject': f'Low Stock Report - {self.company_id.name if self.company_id else "All Companies"}',
+                    'subject': 'Low Stock Report',
                     'body_html': email_body,
                     'email_to': user.email,
                     'auto_delete': True,

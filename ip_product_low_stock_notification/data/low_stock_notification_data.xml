@@ -1,53 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
-        <!-- Cron job for automatic low stock notification -->
-        <record id="ir_cron_low_stock_notification" model="ir.cron">
-            <field name="name">Low Stock Notification</field>
-            <field name="model_id" ref="stock.model_stock_quant"/>
-            <field name="state">code</field>
-            <field name="code">model.send_low_stock_notification()</field>
-            <field name="interval_number">24</field>
-            <field name="interval_type">hours</field>
-            <field name="numbercall">-1</field>
-            <field name="active" eval="True"/>
-        </record>
-
-        <!-- Email template for low stock notification -->
-        <record id="email_template_low_stock_notification" model="mail.template">
-            <field name="name">Low Stock Notification</field>
-            <field name="model">stock.quant</field> <!-- Bu satırı kullan -->
-            <field name="subject">Low Stock Alert - {{ object.name }}</field>
-            <field name="body_html" type="html">
-                <div style="font-family: Arial, sans-serif;">
-                    <h2>Low Stock Alert</h2>
-                    <p>Dear Team,</p>
-                    <p>This is to inform you that the following product has low stock:</p>
-                    <table border="1" style="border-collapse: collapse; width: 100%;">
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="padding: 8px;">Product</th>
-                            <th style="padding: 8px;">Current Quantity</th>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px;">{{ object.name }}</td>
-                            <td style="padding: 8px;">{{ object.qty_available }}</td>
-                        </tr>
-                    </table>
-                    <p>Please take necessary action to replenish the stock.</p>
-                    <p>Best regards,<br/>Stock Management System</p>
-                </div>
-            </field>
-            <field name="auto_delete" eval="False"/>
-        </record>
-        <!-- Report Action for Low Stock Report -->
-        <report
-            id="action_low_stock_report"
-            model="low.stock.report.wizard"
-            string="Low Stock Report"
-            report_type="qweb-pdf"
-            name="report.low_stock_report_doc"  
-            file="ip_product_low_stock_notification.report_low_stock_document"
-            menu="False"
-        />
-    </data>
+  <data noupdate="1">
+    <record id="ir_cron_low_stock_notification" model="ir.cron">
+      <field name="name">Low Stock Notification</field>
+      <field name="model_id" ref="stock.model_stock_quant"/>
+      <field name="state">code</field>
+      <!-- CDATA kullan: XML’de kaçış derdi kalmasın -->
+      <field name="code"><![CDATA[
+model.with_context(
+  allowed_company_ids=[env.company.id],
+  company_id=env.company.id,
+  location=env.company.warehouse_id.lot_stock_id.id if env.company.warehouse_id else env.ref('stock.stock_location_stock').id,
+  company_owned=True
+).send_low_stock_notification()
+      ]]></field>
+      <field name="interval_number">24</field>
+      <field name="interval_type">hours</field>
+      <field name="numbercall">-1</field>
+      <field name="active">True</field>
+    </record>
+  </data>
 </odoo>
