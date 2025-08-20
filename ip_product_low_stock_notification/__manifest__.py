@@ -25,6 +25,7 @@
         'views/product_template_views.xml',
         'wizard/low_stock_report_wizard_views.xml',
         'report/low_stock_report_templates.xml',
+        'report/low_stock_report_action.xml',
     ],
     'installable': True,
     'application': True,

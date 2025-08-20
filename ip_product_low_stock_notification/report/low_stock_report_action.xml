@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="action_low_stock_report" model="ir.actions.report">
+    <field name="name">Low Stock Report</field>
+    <!-- MUST be the wizard's _name (the model where action_generate_report lives) -->
+    <field name="model">low.stock.report.wizard</field>
+    <field name="report_type">qweb-pdf</field>
+
+    <!-- MUST equal the template's t-name above -->
+    <field name="report_name">ip_product_low_stock_notification.low_stock_report</field>
+
+    <!-- Optional but nice -->
+    <field name="report_file">ip_product_low_stock_notification.low_stock_report</field>
+    <field name="print_report_name">'Low Stock - %s' % (object.display_name or 'Report')</field>
+  </record>
+</odoo>
